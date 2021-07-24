@@ -1,5 +1,5 @@
 # Posh-FleetDM
-PowerShell module for FleetDM API.
+PowerShell module for the FleetDM API.
 
 Tested with PowerShell 5.1.x and 7.1.x, other versions may be unsupported.
 This software is provided as is and without any form of warranty or guarantee.  Use at your own risk.
