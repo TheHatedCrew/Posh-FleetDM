@@ -8,7 +8,7 @@ Older versions are available that are compatible with older versions of FleetDM,
 
 **Loading the module:**
 
-In PowerShell you need to execute the following commands to import the module to make use of its functions:
+In PowerShell you need to execute the following command to import the module to make use of its functions:
 
     Import-Module .\Posh-FleetDM.psd1
 
