@@ -3,7 +3,7 @@ PowerShell module for the FleetDM API.
 
 Tested with PowerShell 5.1.x and 7.1.x, other versions may be unsupported.
 This software is provided as is and without any form of warranty or guarantee.  Use at your own risk.
-Version 4.0.0 available, tested with FleetDM 4.0.1.
+Version 4.0.0 available, tested with FleetDM 4.0.1 and 4.1.0.
 Older versions are available that are compatible with older versions of FleetDM, but may lack some features.
 
 **Loading the module:**
