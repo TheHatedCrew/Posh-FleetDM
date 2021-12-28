@@ -396,6 +396,127 @@ function Remove-FleetLabel
     $LabelInfo = Invoke-RestMethod -Method 'DELETE' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
     Write-Verbose $LabelInfo
 }
+
+### EDIT AREA ###
+
+function Get-FleetPolicies
+{
+    <#
+	    .SYNOPSIS
+	    Returns FleetDM polices.
+	    .DESCRIPTION
+	    This function returns a list of all policies saved in FleetDM.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+        .EXAMPLE
+	    Get-FleetPolicies -Session $ExampleFleetSession
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/global/policies')
+    Write-Verbose $ComputerFullURI
+
+    $PolicyInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
+    Write-Verbose $PolicyInfo
+
+    If ($null -eq $PolicyInfo) {Return $null} else {Return $PolicyInfo.policies}
+}
+function New-FleetLabel
+{
+    <#
+	    .SYNOPSIS
+	    Creates a new FleetDM label.
+	    .DESCRIPTION
+	    This function creates a new label in FleetDM.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+        .PARAMETER LabelName
+	    The name of the new FleetDM label.
+	    .PARAMETER LabelSQL
+	    The SQL of the new FleetDM label.
+        .PARAMETER LabelDescription
+	    The description of the new FleetDM label.
+        .PARAMETER LabelPlatform
+        The platform for the new label.
+        .EXAMPLE
+	    New-FleetLabel -Session $ExampleFleetSession -LabelName 'Example Label' -LabelSQL "SELECT name FROM os_version WHERE name LIKE `'Microsoft Windows Server%`';" -LabelDescription 'MS Windows Servers.' -LabelPlatform 'windows'
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $true,
+        Position=1)]
+        [string]$LabelName,
+        [Parameter(Mandatory = $true,
+        Position=2)]
+        [string]$LabelSQL,
+        [Parameter(Mandatory = $true,
+        Position=3)]
+        [string]$LabelDescription,
+        [Parameter(Mandatory = $true,
+        Position=4)]
+        [string]$LabelPlatform
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    $Body = (@{'description'="$LabelDescription";'name'="$LabelName";'query'="$LabelSQL";'platform'="$LabelPlatform"} | ConvertTo-Json -Compress)
+    Write-Verbose $Body
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/labels')
+    Write-Verbose $ComputerFullURI
+    
+    $LabelInfo = Invoke-RestMethod -Method 'POST' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header -Body $Body
+    Write-Verbose $LabelInfo
+
+    If ($null -eq $LabelInfo) {Return $null} else {Return $LabelInfo.label}
+}
+function Remove-FleetLabel
+{
+    <#
+	    .SYNOPSIS
+	    Removes a FleetDM label.
+	    .DESCRIPTION
+	    This function removes a label in FleetDM.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+        .PARAMETER LabelID
+        The ID of the label to remove from FleetDM.
+        .EXAMPLE
+	    Remove-FleetLabel -Session $ExampleFleetSession -LabelID 10
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $true,
+        Position=1)]
+        [string]$LabelID
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/labels/id/' + $LabelID)
+    Write-Verbose $ComputerFullURI
+    
+    $LabelInfo = Invoke-RestMethod -Method 'DELETE' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
+    Write-Verbose $LabelInfo
+}
+
+### END EDIT AREA ###
 function Get-FleetQueries
 {
     <#
