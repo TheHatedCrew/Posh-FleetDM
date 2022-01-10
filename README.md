@@ -8,7 +8,7 @@ Version 4.7.0, compatible with FleetDM 4.x.  Some features may only function wit
 - Improved help.
 - Removed Get-FleetWindowsHosts command.
 
-Tested with PowerShell 5.1.x and 7.1.x, other versions may be unsupported.
+Tested with PowerShell 5.1.x and 7.2.x, other versions may be unsupported.
 This software is provided as is and without any form of warranty or guarantee.  Use at your own risk.
 
 **Loading the module:**
