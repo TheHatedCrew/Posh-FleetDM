@@ -192,60 +192,35 @@ function Get-FleetHosts
 	    This function returns a list of all hosts registered with FleetDM.
         .PARAMETER Session
 	    The FleetDM Session variable.
+        .PARAMETER MaxHosts
+	    The maximum hosts to return.
         .EXAMPLE
 	    Get-FleetHosts -Session $ExampleFleetSession
+        .EXAMPLE
+	    Get-FleetHosts $ExampleFleetSession 15000
         .NOTES
-        This function can return a maximum of 10,000 hosts.
+        This function will return a maximum of 10,000 hosts unless the MaxHosts option is specified.
 	#>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true,
         Position = 0)]
-        [PSCustomObject]$Session
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $false,
+        Position = 1)]
+        [int]$MaxHosts = 10000
     )
         
     $Header = @{'Authorization'="Bearer " + $Session.Token}
     Write-Verbose $Header.Authorization
 
-    $ComputerFullURI = ($Session.ServerHTTP + '/hosts?page=0&per_page=10000&order_key=hostname')
+    $ComputerFullURI = ($Session.ServerHTTP + '/hosts?page=0&per_page=' + $MaxHosts + '&order_key=hostname')
     Write-Verbose $ComputerFullURI
 
     $HostInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
     Write-Verbose $HostInfo
 
     If ($null -eq $HostInfo) {Return $null} else {Return $HostInfo.hosts}
-}
-function Get-FleetWindowsHosts
-{
-    <#
-	    .SYNOPSIS
-	    Returns FleetDM hosts list for Windows hosts.
-	    .DESCRIPTION
-	    This function returns a list of all Windows hosts registered with FleetDM.
-        .PARAMETER Session
-	    The FleetDM Session variable.
-        .EXAMPLE
-	    Get-FleetWindowsHosts -Session $ExampleFleetSession
-        .NOTES
-        This function can return a maximum of 10,000 hosts.
-	#>
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true,
-        Position = 0)]
-        [PSCustomObject]$Session
-    )
-        
-    $Header = @{'Authorization'="Bearer " + $Session.Token}
-    Write-Verbose $Header.Authorization
-
-    $ComputerFullURI = ($Session.ServerHTTP + '/hosts?page=0&per_page=10000&order_key=hostname')
-    Write-Verbose $ComputerFullURI
-
-    $HostInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
-    Write-Verbose $HostInfo
-
-    If ($null -eq $HostInfo) {Return $null} else {Return ($HostInfo.hosts | Where-Object {$_.platform -eq 'windows'})}
 }
 function Remove-FleetHost
 {
@@ -397,7 +372,58 @@ function Remove-FleetLabel
     Write-Verbose $LabelInfo
 }
 
-### EDIT AREA ###
+function Get-FleetPolicyResults
+{
+    <#
+	    .SYNOPSIS
+	    Returns FleetDM hosts that are passing or failing a policy.
+	    .DESCRIPTION
+	    This function returns a list of hosts that are passing or failing the specified policy.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+	    .PARAMETER PolicyID
+	    The ID of the policy for reporting.
+        .PARAMETER MaxHosts
+	    The maximum hosts that will return results.
+        .PARAMETER Pass
+        Causes the command to return hosts that have a passing status for the given policy.
+        .PARAMETER Fail
+        Causes the command to return hosts that have a failing status for the given policy.
+        .EXAMPLE
+	    Get-FleetPolicyResults -Session $ExampleFleetSession -PolicyID 3 -MaxHosts 15000 -Fail
+        .EXAMPLE
+        Get-FleetPolicyResults $ExampleFleetSession 3 -Pass
+        .NOTES
+        This function will return a maximum of 10,000 hosts unless the MaxHosts option is specified.  The -Pass and -Fail options can not be used together.
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $true,
+        Position = 1)]
+        [int]$PolicyID,
+        [Parameter(Mandatory = $false,
+        Position = 2)]
+        [int]$MaxHosts = 10000,
+        [switch]$Pass,
+        [switch]$Fail
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    If ($Pass -and !$Fail) {$ComputerFullURI = ($Session.ServerHTTP + '/hosts?page=0&per_page=' + $MaxHosts + '&order_key=hostname&policy_id=' + $PolicyID + '&policy_response=passing')}
+    elseIf (!$Pass -and $Fail) {$ComputerFullURI = ($Session.ServerHTTP + '/hosts?page=0&per_page=' + $MaxHosts + '&order_key=hostname&policy_id=' + $PolicyID + '&policy_response=failing')}
+    else {Return $null}
+    Write-Verbose $ComputerFullURI
+
+    $HostInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
+    Write-Verbose $HostInfo
+
+    If ($null -eq $HostInfo) {Return $null} else {Return $HostInfo.hosts}
+}
 
 function Get-FleetPolicies
 {
@@ -429,25 +455,26 @@ function Get-FleetPolicies
 
     If ($null -eq $PolicyInfo) {Return $null} else {Return $PolicyInfo.policies}
 }
-function New-FleetLabel
+
+function New-FleetPolicy
 {
     <#
 	    .SYNOPSIS
-	    Creates a new FleetDM label.
+	    Creates a new FleetDM policy.
 	    .DESCRIPTION
-	    This function creates a new label in FleetDM.
+	    This function creates a new policy in FleetDM.
         .PARAMETER Session
 	    The FleetDM Session variable.
         .PARAMETER LabelName
-	    The name of the new FleetDM label.
+	    The name of the new FleetDM policy.
 	    .PARAMETER LabelSQL
-	    The SQL of the new FleetDM label.
+	    The SQL of the new FleetDM policy.
         .PARAMETER LabelDescription
-	    The description of the new FleetDM label.
+	    The description of the new FleetDM policy.
         .PARAMETER LabelPlatform
-        The platform for the new label.
+        The platform for the new policy.
         .EXAMPLE
-	    New-FleetLabel -Session $ExampleFleetSession -LabelName 'Example Label' -LabelSQL "SELECT name FROM os_version WHERE name LIKE `'Microsoft Windows Server%`';" -LabelDescription 'MS Windows Servers.' -LabelPlatform 'windows'
+	    New-FleetPolicy -Session $ExampleFleetSession -PolicyName 'Example Policy' -PolicySQL "SELECT version FROM osquery_info WHERE version = `'5.0.1`';" -PolicyDescription 'OSQuery version current.' -PolicyPlatform 'windows'
 	#>
     [CmdletBinding()]
     param(
@@ -456,45 +483,47 @@ function New-FleetLabel
         [PSCustomObject]$Session,
         [Parameter(Mandatory = $true,
         Position=1)]
-        [string]$LabelName,
+        [string]$PolicyName,
         [Parameter(Mandatory = $true,
         Position=2)]
-        [string]$LabelSQL,
+        [string]$PolicySQL,
         [Parameter(Mandatory = $true,
         Position=3)]
-        [string]$LabelDescription,
-        [Parameter(Mandatory = $true,
+        [string]$PolicyDescription,
+        [Parameter(Mandatory = $false,
         Position=4)]
-        [string]$LabelPlatform
+        [string]$PolicyPlatform = ''
     )
         
     $Header = @{'Authorization'="Bearer " + $Session.Token}
     Write-Verbose $Header.Authorization
 
-    $Body = (@{'description'="$LabelDescription";'name'="$LabelName";'query'="$LabelSQL";'platform'="$LabelPlatform"} | ConvertTo-Json -Compress)
+    $Body = (@{'description'="$PolicyDescription";'name'="$PolicyName";'query'="$PolicySQL";'platform'="$LabelPlatform"} | ConvertTo-Json -Compress)
     Write-Verbose $Body
 
-    $ComputerFullURI = ($Session.ServerHTTP + '/labels')
+    $ComputerFullURI = ($Session.ServerHTTP + '/global/policies')
     Write-Verbose $ComputerFullURI
     
-    $LabelInfo = Invoke-RestMethod -Method 'POST' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header -Body $Body
-    Write-Verbose $LabelInfo
+    $PolicyInfo = Invoke-RestMethod -Method 'POST' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header -Body $Body
+    Write-Verbose $PolicyInfo
 
-    If ($null -eq $LabelInfo) {Return $null} else {Return $LabelInfo.label}
+    If ($null -eq $PolicyInfo) {Return $null} else {Return $PolicyInfo.policy}
 }
-function Remove-FleetLabel
+function Remove-FleetPolicy
 {
     <#
 	    .SYNOPSIS
-	    Removes a FleetDM label.
+	    Removes ones or more FleetDM policies.
 	    .DESCRIPTION
-	    This function removes a label in FleetDM.
+	    This function removes one or more policies saved in FleetDM.
         .PARAMETER Session
 	    The FleetDM Session variable.
-        .PARAMETER LabelID
-        The ID of the label to remove from FleetDM.
+        .PARAMETER PolicyID
+        The IDs of the policies to remove from FleetDM.
         .EXAMPLE
-	    Remove-FleetLabel -Session $ExampleFleetSession -LabelID 10
+	    Remove-FleetPolicy -Session $ExampleFleetSession -PolicyID 10
+        .EXAMPLE
+	    Remove-FleetPolicy -Session $ExampleFleetSession -PolicyID 10, 11, 12
 	#>
     [CmdletBinding()]
     param(
@@ -503,20 +532,21 @@ function Remove-FleetLabel
         [PSCustomObject]$Session,
         [Parameter(Mandatory = $true,
         Position=1)]
-        [string]$LabelID
+        [int[]]$PolicyID
     )
         
     $Header = @{'Authorization'="Bearer " + $Session.Token}
     Write-Verbose $Header.Authorization
 
-    $ComputerFullURI = ($Session.ServerHTTP + '/labels/id/' + $LabelID)
+    $Body = (@{'ids'=$PolicyID} | ConvertTo-Json -Compress)
+    Write-Verbose $Body
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/global/policies/delete')
     Write-Verbose $ComputerFullURI
     
-    $LabelInfo = Invoke-RestMethod -Method 'DELETE' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
-    Write-Verbose $LabelInfo
+    $PolicyInfo = Invoke-RestMethod -Method 'POST' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header -Body $Body
+    Write-Verbose $PolicyInfo
 }
-
-### END EDIT AREA ###
 function Get-FleetQueries
 {
     <#
@@ -738,9 +768,9 @@ function Start-FleetQuery
         .PARAMETER Results
 	    Causes the command to return the results of the FleetDM query instead of the query information.
         .EXAMPLE
-	    Start-FleetQuery -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Hosts @(123,456,789) -QueryTimeOut 60
+	    Start-FleetQuery -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Hosts 123, 456, 789 -QueryTimeOut 60
         .EXAMPLE
-        $ExampleResults = Start-FleetQuery -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Labels @(321,654,987) -Results
+        $ExampleResults = Start-FleetQuery -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Labels 321, 654, 987 -Results
         .NOTES
         Using the -Results option will return the query results as an array of PowerShell objects.
 	#>
@@ -800,9 +830,9 @@ function Start-FleetQueryUsingNames
         .PARAMETER Results
 	    Causes the command to return the results of the FleetDM query instead of the query information.
         .EXAMPLE
-	    Start-FleetQueryUsingNames -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Hosts @('host1.example.example','host2.example.example') -QueryTimeOut 60
+	    Start-FleetQueryUsingNames -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Hosts 'host1.example.example', 'host2.example.example' -QueryTimeOut 60
         .EXAMPLE
-        $ExampleResults = Start-FleetQueryUsingNames -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Labels @('MS Windows','Example Label') -Results
+        $ExampleResults = Start-FleetQueryUsingNames -Session $ExampleFleetSession -Query 'SELECT * FROM osquery_info;' -Labels 'MS Windows', 'Example Label' -Results
         .NOTES
         Using the -Results option will return the query results as an array of PowerShell objects.
 	#>
