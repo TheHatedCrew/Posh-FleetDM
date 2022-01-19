@@ -183,6 +183,74 @@ function Get-FleetSessionUser
 
     If ($null -eq $UserInfo) {Return $null} else {Return $UserInfo.user}
 }
+
+function Get-FleetSoftware
+{
+    <#
+	    .SYNOPSIS
+	    Returns FleetDM software list.
+	    .DESCRIPTION
+	    This function returns a list of installed software on hosts.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+	    .PARAMETER Query
+	    Search name field of software list for query term.
+        .PARAMETER MaxHosts
+	    The maximum hosts that will return results.
+        .PARAMETER TeamID
+        The ID of the team to filter results. (FleetDM Premium ONLY)
+        .PARAMETER Vulnerable
+        Set to $true or $false to filter results to software with or without vulnerabilities.
+        .PARAMETER Ascending
+        Sorts output by name in ascending order.
+        .PARAMETER Descending
+        Sorts output by name in descending order.
+        .EXAMPLE
+	    Get-FleetSoftware -Session $ExampleFleetSession -Query 'OSQuery' -MaxHosts 15000 -TeamID 3 -Vulnerable $true -Descending
+        .EXAMPLE
+        Get-FleetSoftware $ExampleFleetSession 'Fleet' 2 500 -Ascending
+        .EXAMPLE
+        Get-FleetSoftware $ExampleFleetSession -Ascending
+        .NOTES
+        This function will return a maximum of 10,000 hosts unless the MaxHosts option is specified.  The -Ascending and -Descending options can not be used together.
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $false,
+        Position = 1)]
+        [int]$Query = $null,
+        [Parameter(Mandatory = $false,
+        Position = 2)]
+        [int]$TeamID = $null,
+        [Parameter(Mandatory = $false,
+        Position = 3)]
+        [int]$MaxHosts = 10000,
+        [bool]$Vulnerable = $null,
+        [switch]$Ascending,
+        [switch]$Descending
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/software?page=0&per_page=' + $MaxHosts)
+
+    If ($Ascending -and !$Descending) {$ComputerFullURI = ($ComputerFullURI + '&order_key=name&order_direction=asc')}
+    If (!$Ascending -and $Descending) {$ComputerFullURI = ($ComputerFullURI + '&order_key=name&order_direction=desc')}
+    If ($Query) {$ComputerFullURI = ($ComputerFullURI + '&query=' + $Query)}
+    If ($TeamID) {$ComputerFullURI = ($ComputerFullURI + '&team_id=' + $TeamID)}
+    If ($Vulnerable) {$ComputerFullURI = ($ComputerFullURI + '&vulnerable=' + $Vulnerable)}
+    
+    Write-Verbose $ComputerFullURI
+
+    $SoftwareInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
+    Write-Verbose $SoftwareInfo
+
+    If ($null -eq $SoftwareInfo) {Return $null} else {Return $SoftwareInfo.software}
+}
 function Get-FleetHosts
 {
     <#
