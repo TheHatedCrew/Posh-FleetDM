@@ -201,8 +201,6 @@ function Get-FleetSoftware
         The ID of the team to filter results. (FleetDM Premium ONLY)
         .PARAMETER Vulnerable
         Returns only vulnerable software.
-        .PARAMETER NotVulnerable
-        Returns only non-vulnerable software.
         .PARAMETER Ascending
         Sorts output by name in ascending order.
         .PARAMETER Descending
@@ -231,7 +229,6 @@ function Get-FleetSoftware
         Position = 3)]
         [int]$MaxHosts = 10000,
         [switch]$Vulnerable,
-        [switch]$NotVulnerable,
         [switch]$Ascending,
         [switch]$Descending
     )
