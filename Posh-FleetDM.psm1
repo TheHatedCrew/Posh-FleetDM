@@ -200,7 +200,9 @@ function Get-FleetSoftware
         .PARAMETER TeamID
         The ID of the team to filter results. (FleetDM Premium ONLY)
         .PARAMETER Vulnerable
-        Set to $true or $false to filter results to software with or without vulnerabilities.
+        Returns only vulnerable software.
+        .PARAMETER NotVulnerable
+        Returns only non-vulnerable software.
         .PARAMETER Ascending
         Sorts output by name in ascending order.
         .PARAMETER Descending
@@ -228,7 +230,8 @@ function Get-FleetSoftware
         [Parameter(Mandatory = $false,
         Position = 3)]
         [int]$MaxHosts = 10000,
-        [bool]$Vulnerable = $null,
+        [switch]$Vulnerable,
+        [switch]$NotVulnerable,
         [switch]$Ascending,
         [switch]$Descending
     )
@@ -242,7 +245,8 @@ function Get-FleetSoftware
     If (!$Ascending -and $Descending) {$ComputerFullURI = ($ComputerFullURI + '&order_key=name&order_direction=desc')}
     If ($Query) {$ComputerFullURI = ($ComputerFullURI + '&query=' + $Query)}
     If ($TeamID) {$ComputerFullURI = ($ComputerFullURI + '&team_id=' + $TeamID)}
-    If ($Vulnerable) {$ComputerFullURI = ($ComputerFullURI + '&vulnerable=' + $Vulnerable)}
+    If ($Vulnerable -and !$NotVulnerable) {$ComputerFullURI = ($ComputerFullURI + '&vulnerable=true')}
+    If (!$Vulnerable -and $NotVulnerable) {$ComputerFullURI = ($ComputerFullURI + '&vulnerable=false')}
     
     Write-Verbose $ComputerFullURI
 
