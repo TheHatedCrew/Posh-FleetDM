@@ -200,7 +200,7 @@ function Get-FleetSoftware
         .PARAMETER TeamID
         The ID of the team to filter results. (FleetDM Premium ONLY)
         .PARAMETER Vulnerable
-        Returns only vulnerable software.
+        Returns only vulnerable software with vulnerability information.
         .PARAMETER Ascending
         Sorts output by name in ascending order.
         .PARAMETER Descending
@@ -221,7 +221,7 @@ function Get-FleetSoftware
         [PSCustomObject]$Session,
         [Parameter(Mandatory = $false,
         Position = 1)]
-        [int]$Query = $null,
+        [string]$Query = $null,
         [Parameter(Mandatory = $false,
         Position = 2)]
         [int]$TeamID = $null,
