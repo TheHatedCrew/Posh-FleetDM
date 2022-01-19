@@ -1,6 +1,10 @@
 # Posh-FleetDM
 PowerShell module for the FleetDM API.
 
+Version 4.7.1, compatible with FleetDM 4.x.  Some features may only function with FleetDM 4.7 or newer.
+
+- New Get-FleetSoftware command.
+
 Version 4.7.0, compatible with FleetDM 4.x.  Some features may only function with FleetDM 4.7 or newer.
 
 - New FleetDM Policy commands.  (New, Get, Remove, Results.)
