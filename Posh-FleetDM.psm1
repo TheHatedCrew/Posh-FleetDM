@@ -195,8 +195,8 @@ function Get-FleetSoftware
 	    The FleetDM Session variable.
 	    .PARAMETER Query
 	    Search name field of software list for query term.
-        .PARAMETER MaxHosts
-	    The maximum hosts that will return results.
+        .PARAMETER MaxResults
+	    The maximum results that will be returned.
         .PARAMETER TeamID
         The ID of the team to filter results. (FleetDM Premium ONLY)
         .PARAMETER Vulnerable
@@ -206,13 +206,13 @@ function Get-FleetSoftware
         .PARAMETER Descending
         Sorts output by name in descending order.
         .EXAMPLE
-	    Get-FleetSoftware -Session $ExampleFleetSession -Query 'OSQuery' -MaxHosts 15000 -TeamID 3 -Vulnerable $true -Descending
+	    Get-FleetSoftware -Session $ExampleFleetSession -Query 'OSQuery' -MaxResults 15000 -TeamID 3 -Vulnerable -Descending
         .EXAMPLE
         Get-FleetSoftware $ExampleFleetSession 'Fleet' 2 500 -Ascending
         .EXAMPLE
         Get-FleetSoftware $ExampleFleetSession -Ascending
         .NOTES
-        This function will return a maximum of 10,000 hosts unless the MaxHosts option is specified.  The -Ascending and -Descending options can not be used together.
+        This function will return a maximum of 10,000 software items unless the MaxResults option is specified.  The -Ascending and -Descending options can not be used together.
 	#>
     [CmdletBinding()]
     param(
@@ -227,7 +227,7 @@ function Get-FleetSoftware
         [int]$TeamID = $null,
         [Parameter(Mandatory = $false,
         Position = 3)]
-        [int]$MaxHosts = 10000,
+        [int]$MaxResults = 10000,
         [switch]$Vulnerable,
         [switch]$Ascending,
         [switch]$Descending
@@ -236,7 +236,7 @@ function Get-FleetSoftware
     $Header = @{'Authorization'="Bearer " + $Session.Token}
     Write-Verbose $Header.Authorization
 
-    $ComputerFullURI = ($Session.ServerHTTP + '/software?page=0&per_page=' + $MaxHosts)
+    $ComputerFullURI = ($Session.ServerHTTP + '/software?page=0&per_page=' + $MaxResults)
 
     If ($Ascending -and !$Descending) {$ComputerFullURI = ($ComputerFullURI + '&order_key=name&order_direction=asc')}
     If (!$Ascending -and $Descending) {$ComputerFullURI = ($ComputerFullURI + '&order_key=name&order_direction=desc')}
