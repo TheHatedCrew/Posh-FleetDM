@@ -324,6 +324,78 @@ function Remove-FleetHost
     $HostInfo = Invoke-RestMethod -Method 'DELETE' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
     Write-Verbose $HostInfo
 }
+function Get-FleetTeams
+{
+    <#
+	    .SYNOPSIS
+	    Returns FleetDM teams list.
+	    .DESCRIPTION
+	    This function returns a list of all teams in FleetDM.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+        .PARAMETER MaxTeamss
+	    The maximum teams to return.
+        .EXAMPLE
+	    Get-FleetTeams -Session $ExampleFleetSession
+        .EXAMPLE
+	    Get-FleetTeamss $ExampleFleetSession 15000
+        .NOTES
+        This function will return a maximum of 10,000 teams unless the MaxTeams option is specified.
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $false,
+        Position = 1)]
+        [int]$MaxTeams = 10000
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/teams?page=0&per_page=' + $MaxTeams + '&order_key=name')
+    Write-Verbose $ComputerFullURI
+
+    $TeamInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
+    Write-Verbose $TeamInfo
+
+    If ($null -eq $TeamInfo) {Return $null} else {Return $TeamInfo.teams}
+}
+function Remove-FleetTeam
+{
+    <#
+	    .SYNOPSIS
+	    Removes a team from FleetDM.
+	    .DESCRIPTION
+	    This function removes the specified team from FleetDM.
+        .PARAMETER Session
+	    The FleetDM Session variable.
+        .PARAMETER TeamID
+	    The ID of the team to remove from FleetDM.
+        .EXAMPLE
+	    Remove-FleetTeam -Session $ExampleFleetSession -TeamID 2
+	#>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0)]
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $true,
+        Position=1)]
+        [int]$TeamID
+    )
+        
+    $Header = @{'Authorization'="Bearer " + $Session.Token}
+    Write-Verbose $Header.Authorization
+
+    $ComputerFullURI = ($Session.ServerHTTP + '/teams/' + $TeamID)
+    Write-Verbose $ComputerFullURI
+
+    $TeamInfo = Invoke-RestMethod -Method 'DELETE' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
+    Write-Verbose $TeamInfo
+}
 function Get-FleetLabels
 {
     <#
