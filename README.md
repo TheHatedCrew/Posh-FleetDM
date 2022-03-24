@@ -3,7 +3,7 @@ PowerShell module for the FleetDM API.
 
 Version 4.11.0, compatible with FleetDM 4.x.  Some features may only function with FleetDM 4.11 or newer.
 
-- New FleetDM Team commands.  (New and Remove)
+- New FleetDM Team commands.  (Get and Remove)
 
 Version 4.7.1, compatible with FleetDM 4.x.  Some features may only function with FleetDM 4.7 or newer.
 
