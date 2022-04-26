@@ -1,6 +1,10 @@
 # Posh-FleetDM
 PowerShell module for the FleetDM API.
 
+Version 4.11.1, compatible with FleetDM 4.x.  Some features may only function with FleetDM 4.11 or newer.
+
+- Improved Get-FleetPolicies command can now accept optional Team ID to get team specific policies.
+
 Version 4.11.0, compatible with FleetDM 4.x.  Some features may only function with FleetDM 4.11 or newer.
 
 - New FleetDM Team commands.  (Get and Remove.)
