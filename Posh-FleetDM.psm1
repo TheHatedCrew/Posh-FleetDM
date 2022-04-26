@@ -565,38 +565,47 @@ function Get-FleetPolicyResults
 
     If ($null -eq $HostInfo) {Return $null} else {Return $HostInfo.hosts}
 }
-
 function Get-FleetPolicies
 {
     <#
-	    .SYNOPSIS
-	    Returns FleetDM polices.
-	    .DESCRIPTION
-	    This function returns a list of all policies saved in FleetDM.
+        .SYNOPSIS
+        Returns FleetDM polices.
+        .DESCRIPTION
+        This function returns a list of policies saved in FleetDM.
         .PARAMETER Session
-	    The FleetDM Session variable.
+        The FleetDM Session variable.
+        .PARAMETER TeamID
+        The optional team ID causes team specific policies to be returned.
         .EXAMPLE
-	    Get-FleetPolicies -Session $ExampleFleetSession
-	#>
+        Get-FleetPolicies -Session $ExampleFleetSession
+        .EXAMPLE
+        Get-FleetPolicies -Session $ExampleFleetSession -TeamID 2
+        .NOTES
+        This function will return FleetDM global policies by default.  You can specify a team ID to get policies for a specific team.
+    #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true,
         Position = 0)]
-        [PSCustomObject]$Session
+        [PSCustomObject]$Session,
+        [Parameter(Mandatory = $false,
+        Position = 1)]
+        [int]$TeamID = $null
     )
         
     $Header = @{'Authorization'="Bearer " + $Session.Token}
     Write-Verbose $Header.Authorization
-
-    $ComputerFullURI = ($Session.ServerHTTP + '/global/policies')
+    
+    $ComputerFullURI = $Session.ServerHTTP
+    If (!$TeamID) {$ComputerFullURI = ($ComputerFullURI + '/global/policies')}
+    else {$ComputerFullURI = ($ComputerFullURI + '/teams/' + $TeamID + '/policies')}
     Write-Verbose $ComputerFullURI
-
+    
     $PolicyInfo = Invoke-RestMethod -Method 'GET' -ContentType 'application/json' -Uri $ComputerFullURI -Headers $Header
     Write-Verbose $PolicyInfo
-
+    
     If ($null -eq $PolicyInfo) {Return $null} else {Return $PolicyInfo.policies}
 }
-
 function New-FleetPolicy
 {
     <#
